@@ -31,7 +31,7 @@ export default function SceneController() {
     // 3. Look At Target (The Couple)
     // We lock the camera's focus exactly on their World Height (-2.6)
     // This creates a perfectly flat, straight-on angle. No looking down.
-    state.camera.lookAt(0, -2.6, 0)
+    state.camera.lookAt(0, -0.7, 0)
   })
 
   return null
