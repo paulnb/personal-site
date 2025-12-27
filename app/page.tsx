@@ -29,17 +29,26 @@ export default function Home() {
               {/* Page 2: Spacer for the Zoom/Rotate transition */}
               <div className="h-screen" />
 
-              {/* Page 3: Phone Screen Content */}
+              {/* Page 3: The Phone Screen Content */}
               <div className="h-screen flex items-center justify-center p-10">
-                <div className="bg-white/70 backdrop-blur-lg p-12 rounded-3xl shadow-2xl max-w-lg border border-white/20">
-                  <h2 className="text-3xl font-bold text-slate-900">St. Carlo Acutis</h2>
-                  <p className="mt-4 text-slate-700 leading-relaxed">
-                    "The highway to heaven." Transitioning from the physical mountains 
-                    of Assisi to the digital world he pioneered.
+                {/* We use 'motion.div' from framer-motion to make the fade-in smooth */}
+                <div className="bg-white/40 backdrop-blur-xl p-8 rounded-[3rem] shadow-2xl max-w-sm border border-white/40 text-center">
+                  <div className="w-16 h-1.5 bg-slate-400/30 rounded-full mx-auto mb-6" /> {/* Phone 'Speaker' icon */}
+                  
+                  <h2 className="text-2xl font-bold text-slate-900">Digital Apostle</h2>
+                  <p className="mt-4 text-slate-800 text-sm leading-relaxed">
+                    "To always be close to Jesus, that's my life plan." 
+                    Explore the intersection of faith and the internet.
                   </p>
-                  <button className="mt-8 px-6 py-3 bg-blue-600 text-white rounded-full font-medium hover:bg-blue-700 transition-colors">
-                    Explore the Exhibit
-                  </button>
+                  
+                  <div className="grid grid-cols-2 gap-4 mt-8">
+                    <button className="p-4 bg-white/50 rounded-2xl text-xs font-bold hover:bg-white transition-all">
+                      Eucharistic Miracles
+                    </button>
+                    <button className="p-4 bg-white/50 rounded-2xl text-xs font-bold hover:bg-white transition-all">
+                      His Legacy
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
