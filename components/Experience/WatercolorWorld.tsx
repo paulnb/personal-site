@@ -1,65 +1,111 @@
 // @ts-nocheck
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { Image, useScroll } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { useFrame, useThree } from '@react-three/fiber'
+import * as THREE from 'three'
 
 export default function WatercolorWorld() {
   const scroll = useScroll()
+  const { camera, size } = useThree() 
+  
   const kidsRef = useRef()
   const phoneRef = useRef()
   const benchRef = useRef()
+  const mountainRef = useRef()
 
+  // --- CONTAIN MATH (Keep exactly as is) ---
+  const bgDepth = -20 
+  const distance = camera.position.z - bgDepth 
+  const vFov = (camera.fov * Math.PI) / 180
+  const visibleHeight = 2 * Math.tan(vFov / 2) * distance
+  const visibleWidth = visibleHeight * (size.width / size.height)
+  const imageAspectRatio = 1.5 
+  const screenAspectRatio = size.width / size.height
+
+  let scaleW, scaleH
+  if (screenAspectRatio > imageAspectRatio) {
+    scaleH = visibleHeight
+    scaleW = scaleH * imageAspectRatio
+  } else {
+    scaleW = visibleWidth
+    scaleH = scaleW / imageAspectRatio
+  }
+  
   useFrame(() => {
-    const r1 = scroll.range(0.2, 0.4) // Kids running in
-    const r2 = scroll.range(0.6, 0.8) // Phone appears
-    const r3 = scroll.range(0.8, 1.0) // Final zoom blur
+    const r1 = scroll.range(0.2, 0.4)
+    const r2 = scroll.range(0.6, 0.8)
+    const r3 = scroll.range(0.8, 1.0)
 
-    // KIDS RUNNING: Move from left (-10) to the bench (-1)
+    // KIDS ANIMATION
     if (kidsRef.current) {
-      // 1. HORIZONTAL: Move from left (-10) to the bench (-1)
-      kidsRef.current.position.x = -10 + (r1 * 9)
-
-      // 2. DEPTH: Move "away" from the camera toward the bench
-      kidsRef.current.position.z = 2 - (r1 * 1.5) 
-
-      // 3. THE HOP: Bouncing up and down as they run
-      // Math.abs(Math.sin) creates a consistent "bouncing ball" motion
-      kidsRef.current.position.y = -1.5 + Math.abs(Math.sin(r1 * 20) * 0.2)
+      kidsRef.current.position.x = -12 + (r1 * 12)
+      kidsRef.current.position.z = 2 - (r1 * 1.5)
       
-      // 4. THE LEAN: Tilting forward slightly to show momentum
+      // FIX: Base height changed from -1.5 to 1.7
+      // (Bench is at 2.2, so 1.7 puts kids' feet on the ground nicely)
+      kidsRef.current.position.y = 1.7 + Math.abs(Math.sin(r1 * 20) * 0.2)
+      
       kidsRef.current.rotation.z = Math.sin(r1 * 20) * 0.05
     }
-    // THE SELFIE POP: Phone appears in Dad's hand area
+
+    // PHONE POP
     if (phoneRef.current) {
-      phoneRef.current.scale.setScalar(r2 * 1.2) // Pops from size 0 to 1.2
+      phoneRef.current.scale.setScalar(r2 * 1.2)
       phoneRef.current.material.opacity = r2
     }
     
-    // BLUR EFFECT: Bench fades as we "enter" the phone
+    // BENCH FADE
     if (benchRef.current) {
       benchRef.current.material.opacity = 1 - (r3 * 0.5)
     }
   })
 
   return (
-    <group>
+    // GROUP POSITION: Keep this! It's working perfectly.
+    <group position={[0, -4.8, 0]}>
+      
       <ambientLight intensity={1.5} />
 
-      {/* BACKGROUND: Mountains */}
-      <Image url="/images/mountains_only.png" scale={[25, 12]} position={[0, 0, -5]} transparent />
+      {/* BACKGROUND */}
+      <Image 
+        ref={mountainRef}
+        url="/images/mountains_only.png" 
+        scale={[scaleW, scaleH]} 
+        position={[0, 6, bgDepth]} 
+        transparent 
+      />
 
-      {/* MIDDLE GROUND: Couple on Bench */}
-      <Image ref={benchRef} url="/images/couple_bench.png" scale={[6, 4]} position={[0, -1, 0]} transparent />
+      {/* MIDDLE GROUND: Couple
+          Position: 2.2 looks perfect in your screenshot.
+      */}
+      <Image 
+        ref={benchRef} 
+        url="/images/couple_bench.png" 
+        scale={[7, 4.6]} 
+        position={[0, 2.2, 0]} 
+        transparent 
+      />
 
-      {/* FOREGROUND: Kids (Starts off-screen left) */}
-      <Image ref={kidsRef} url="/images/kids_running.png" scale={[3, 2]} position={[-10, -1.5, 2]} transparent />
+      {/* FOREGROUND: Kids
+          Position: 1.7 (Just below bench seat level)
+      */}
+      <Image 
+        ref={kidsRef} 
+        url="/images/kids_running.png" 
+        scale={[3, 2]} 
+        position={[-12, 1.7, 2]} 
+        transparent 
+      />
 
-      {/* THE "SELFIE" PHONE: Positioned near Dad's hand */}
+      {/* PHONE FRAME 
+          Position: 3.5 (Approx 1.3 units above the bench seat, near Dad's hand)
+          Your previous 5.5 might be too high (floating in sky).
+      */}
       <Image 
         ref={phoneRef} 
         url="/images/phone_frame.png" 
         scale={[0, 0]} 
-        position={[0.5, -0.2, 1]} 
+        position={[0.5, 3.5, 1]} 
         transparent 
         opacity={0}
       />
