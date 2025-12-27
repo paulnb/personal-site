@@ -61,4 +61,4 @@ export default function WatercolorWorld() {
       <spotLight position={[10, 10, 10]} intensity={2} />
     </group>
   )
-}s
+}
