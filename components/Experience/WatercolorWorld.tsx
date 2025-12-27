@@ -1,64 +1,68 @@
 // @ts-nocheck
 import { useRef } from 'react'
-import { Image, Float, useScroll, useGLTF } from '@react-three/drei'
+import { Image, useScroll } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 
 export default function WatercolorWorld() {
   const scroll = useScroll()
-  const mountainRef = useRef()
+  const kidsRef = useRef()
   const phoneRef = useRef()
-  
-  // 1. Load the 3D Model
-  const { scene } = useGLTF('/models/phone.glb')
+  const benchRef = useRef()
 
-  useFrame((state) => {
-    const r2 = scroll.range(0.4, 0.6)
-    
-    // Mountain blur/fade logic
-    if (mountainRef.current) {
-      mountainRef.current.material.opacity = 0.8 - (r2 * 0.6)
-      mountainRef.current.position.z = -5 - (r2 * 5) 
+  useFrame(() => {
+    const r1 = scroll.range(0.2, 0.4) // Kids running in
+    const r2 = scroll.range(0.6, 0.8) // Phone appears
+    const r3 = scroll.range(0.8, 1.0) // Final zoom blur
+
+    // KIDS RUNNING: Move from left (-10) to the bench (-1)
+    if (kidsRef.current) {
+      // 1. HORIZONTAL: Move from left (-10) to the bench (-1)
+      kidsRef.current.position.x = -10 + (r1 * 9)
+
+      // 2. DEPTH: Move "away" from the camera toward the bench
+      kidsRef.current.position.z = 2 - (r1 * 1.5) 
+
+      // 3. THE HOP: Bouncing up and down as they run
+      // Math.abs(Math.sin) creates a consistent "bouncing ball" motion
+      kidsRef.current.position.y = -1.5 + Math.abs(Math.sin(r1 * 20) * 0.2)
+      
+      // 4. THE LEAN: Tilting forward slightly to show momentum
+      kidsRef.current.rotation.z = Math.sin(r1 * 20) * 0.05
     }
-
-    // 2. Subtle Phone Animation
+    // THE SELFIE POP: Phone appears in Dad's hand area
     if (phoneRef.current) {
-      // The phone tilts slightly as you zoom in to catch the light
-      phoneRef.current.rotation.y = Math.PI + (r2 * 0.5)
-      phoneRef.current.rotation.z = r2 * 0.2
+      phoneRef.current.scale.setScalar(r2 * 1.2) // Pops from size 0 to 1.2
+      phoneRef.current.material.opacity = r2
+    }
+    
+    // BLUR EFFECT: Bench fades as we "enter" the phone
+    if (benchRef.current) {
+      benchRef.current.material.opacity = 1 - (r3 * 0.5)
     }
   })
 
   return (
     <group>
-      {/* Background Mountains */}
+      <ambientLight intensity={1.5} />
+
+      {/* BACKGROUND: Mountains */}
+      <Image url="/images/mountains_only.png" scale={[25, 12]} position={[0, 0, -5]} transparent />
+
+      {/* MIDDLE GROUND: Couple on Bench */}
+      <Image ref={benchRef} url="/images/couple_bench.png" scale={[6, 4]} position={[0, -1, 0]} transparent />
+
+      {/* FOREGROUND: Kids (Starts off-screen left) */}
+      <Image ref={kidsRef} url="/images/kids_running.png" scale={[3, 2]} position={[-10, -1.5, 2]} transparent />
+
+      {/* THE "SELFIE" PHONE: Positioned near Dad's hand */}
       <Image 
-        ref={mountainRef}
-        url="/images/mountains.png" 
-        scale={[20, 10]} 
-        position={[0, 2, -5]} 
+        ref={phoneRef} 
+        url="/images/phone_frame.png" 
+        scale={[0, 0]} 
+        position={[0.5, -0.2, 1]} 
         transparent 
+        opacity={0}
       />
-
-      {/* Carlo stays as a  watercolor cutout */}
-      <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.4}>
-        <Image url="/images/carlo.png" scale={[3, 4]} position={[0, 0, 0]} transparent />
-      </Float>
-
-      {/* 3. The 3D Phone - Positioned where his hand would be */}
-      <primitive 
-        ref={phoneRef}
-        object={scene} 
-        scale={1.5} 
-        position={[0.8, -0.5, 0.5]} // Adjust this to line up with Carlo's hand
-        rotation={[0, Math.PI, 0]} 
-      />
-
-      <Float speed={3} floatIntensity={2}>
-        <Image url="/images/cloud.png" scale={[2.5, 1.2]} position={[-4, -1, 3]} transparent />
-      </Float>
-      
-      {/* Add a light so we can see the 3D phone's details */}
-      <spotLight position={[10, 10, 10]} intensity={2} />
     </group>
   )
 }
